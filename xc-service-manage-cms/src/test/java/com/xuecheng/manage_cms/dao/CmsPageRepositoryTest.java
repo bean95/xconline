@@ -1,16 +1,17 @@
 package com.xuecheng.manage_cms.dao;
 
 import com.xuecheng.framework.domain.cms.CmsPage;
+import com.xuecheng.framework.domain.cms.request.QueryPageRequest;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.*;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import java.beans.Beans;
 import java.util.List;
 import java.util.Optional;
 
@@ -79,6 +80,26 @@ public class CmsPageRepositoryTest {
     @Test
     public void testDeleteByPageAliase(){
         cmsPageRepository.deleteBypageAliase("更新别明");
+    }
+
+    @Test
+    public void testFindAllByExample(){
+
+        int page = 0;
+        int size = 10;
+        Pageable pageable = PageRequest.of(page,size);
+
+        CmsPage query = new CmsPage();
+        query.setPageAliase("页");
+
+        ExampleMatcher exampleMatcher = ExampleMatcher.matching()
+                .withMatcher("pageAliase",ExampleMatcher.GenericPropertyMatchers.contains());
+
+        Example<CmsPage> example = Example.of(query,exampleMatcher);
+
+        Page<CmsPage> all = cmsPageRepository.findAll(example, pageable);
+        System.out.println(all.getContent());
+
     }
 
 }

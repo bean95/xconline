@@ -10,10 +10,9 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -36,8 +35,15 @@ public class CmsPageService {
         if(size <= 0){
             size = 10;
         }
+
+        //Example
+        CmsPage cmsPage = new CmsPage();
+        BeanUtils.copyProperties(queryPageRequest,cmsPage);
+        Example<CmsPage> example = Example.of(cmsPage, ExampleMatcher.matching().withMatcher("pageAliase",ExampleMatcher.GenericPropertyMatchers.contains()));
+
+
         Pageable pageable = PageRequest.of(page-1,size);
-        Page<CmsPage> all = cmsPageRepository.findAll(pageable);
+        Page<CmsPage> all = cmsPageRepository.findAll(example,pageable);
 
         QueryResult<CmsPage> queryResult = new QueryResult<>();
         queryResult.setList(all.getContent());
