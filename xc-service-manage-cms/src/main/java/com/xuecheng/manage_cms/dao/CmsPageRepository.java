@@ -8,4 +8,6 @@ public interface CmsPageRepository extends MongoRepository<CmsPage,String> {
     CmsPage findBypageAliase(String pageAliase);
     void deleteBypageAliase(String pageAliase);
 
+    CmsPage findByPageNameAndSiteIdAndPageWebPath(String pageName,String siteId,String pageWebPath);
+
 }

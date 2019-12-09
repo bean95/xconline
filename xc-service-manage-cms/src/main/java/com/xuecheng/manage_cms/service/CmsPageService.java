@@ -2,6 +2,7 @@ package com.xuecheng.manage_cms.service;
 
 import com.xuecheng.framework.domain.cms.CmsPage;
 import com.xuecheng.framework.domain.cms.request.QueryPageRequest;
+import com.xuecheng.framework.domain.cms.response.CmsPageResult;
 import com.xuecheng.framework.model.response.CommonCode;
 import com.xuecheng.framework.model.response.QueryResponseResult;
 import com.xuecheng.framework.model.response.QueryResult;
@@ -10,6 +11,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
@@ -38,7 +40,11 @@ public class CmsPageService {
 
         //Example
         CmsPage cmsPage = new CmsPage();
-        BeanUtils.copyProperties(queryPageRequest,cmsPage);
+        //BeanUtils.copyProperties(queryPageRequest,cmsPage);
+        if(StringUtils.isNotEmpty(queryPageRequest.getSiteId()))
+            cmsPage.setSiteId(queryPageRequest.getSiteId());
+        if(StringUtils.isNotEmpty(queryPageRequest.getPageAliase()))
+            cmsPage.setPageAliase(queryPageRequest.getPageAliase());
         Example<CmsPage> example = Example.of(cmsPage, ExampleMatcher.matching().withMatcher("pageAliase",ExampleMatcher.GenericPropertyMatchers.contains()));
 
 
@@ -51,5 +57,16 @@ public class CmsPageService {
         QueryResponseResult queryResponseResult = new QueryResponseResult(CommonCode.SUCCESS,queryResult);
         return queryResponseResult;
 
+    }
+
+    public CmsPageResult add(CmsPage cmsPage){
+        //校验页面名称、站点Id、页面webpath的唯一性 ---唯一索引
+        CmsPage existPage = cmsPageRepository.findByPageNameAndSiteIdAndPageWebPath(cmsPage.getPageName(),cmsPage.getSiteId(),cmsPage.getPageWebPath());
+        if(existPage == null){
+            cmsPage.setPageId(null);
+            cmsPageRepository.save(cmsPage);
+            return new CmsPageResult(CommonCode.SUCCESS,cmsPage);
+        }
+        return new CmsPageResult(CommonCode.FAIL,null);
     }
 }
