@@ -6,6 +6,7 @@ import com.xuecheng.framework.domain.cms.response.CmsPageResult;
 import com.xuecheng.framework.model.response.CommonCode;
 import com.xuecheng.framework.model.response.QueryResponseResult;
 import com.xuecheng.framework.model.response.QueryResult;
+import com.xuecheng.framework.model.response.ResponseResult;
 import com.xuecheng.manage_cms.dao.CmsPageRepository;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -16,6 +17,8 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
+
+import java.util.Optional;
 
 @Service
 @Api(value="cms页面管理接口",description = "cms页面管理接口，提供页面的增、删、改、查")
@@ -69,4 +72,38 @@ public class CmsPageService {
         }
         return new CmsPageResult(CommonCode.FAIL,null);
     }
+
+    public CmsPage getById(String id){
+        final Optional<CmsPage> optional = cmsPageRepository.findById(id);
+        if(optional.isPresent()){
+            return optional.get();
+        }
+        return null;
+    }
+
+    public CmsPageResult update(String id, CmsPage cmsPage){
+        CmsPage origin = this.getById(id);
+        if(origin != null){
+            origin.setTemplateId(cmsPage.getTemplateId());
+            origin.setSiteId(cmsPage.getSiteId());
+            origin.setPageAliase(cmsPage.getPageAliase());
+            origin.setPageName(cmsPage.getPageName());
+            origin.setPageWebPath(cmsPage.getPageWebPath());
+            origin.setPagePhysicalPath(cmsPage.getPagePhysicalPath());
+            origin.setPageType(cmsPage.getPageType());
+            cmsPageRepository.save(origin);
+            return new CmsPageResult(CommonCode.SUCCESS,origin);
+        }
+        return new CmsPageResult(CommonCode.FAIL,null);
+    }
+
+    public ResponseResult delete(String id){
+        CmsPage origin = this.getById(id);
+        if(origin != null){
+            cmsPageRepository.deleteById(id);
+            return new ResponseResult(CommonCode.SUCCESS);
+        }
+        return new ResponseResult(CommonCode.FAIL);
+    }
+
 }
