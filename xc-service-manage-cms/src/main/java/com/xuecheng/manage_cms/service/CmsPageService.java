@@ -2,7 +2,9 @@ package com.xuecheng.manage_cms.service;
 
 import com.xuecheng.framework.domain.cms.CmsPage;
 import com.xuecheng.framework.domain.cms.request.QueryPageRequest;
+import com.xuecheng.framework.domain.cms.response.CmsCode;
 import com.xuecheng.framework.domain.cms.response.CmsPageResult;
+import com.xuecheng.framework.exception.ExceptionCast;
 import com.xuecheng.framework.model.response.CommonCode;
 import com.xuecheng.framework.model.response.QueryResponseResult;
 import com.xuecheng.framework.model.response.QueryResult;
@@ -13,7 +15,6 @@ import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
@@ -62,7 +63,7 @@ public class CmsPageService {
 
     }
 
-    public CmsPageResult add(CmsPage cmsPage){
+    /*public CmsPageResult add(CmsPage cmsPage){
         //校验页面名称、站点Id、页面webpath的唯一性 ---唯一索引
         CmsPage existPage = cmsPageRepository.findByPageNameAndSiteIdAndPageWebPath(cmsPage.getPageName(),cmsPage.getSiteId(),cmsPage.getPageWebPath());
         if(existPage == null){
@@ -71,6 +72,17 @@ public class CmsPageService {
             return new CmsPageResult(CommonCode.SUCCESS,cmsPage);
         }
         return new CmsPageResult(CommonCode.FAIL,null);
+    }*/
+    public CmsPageResult add(CmsPage cmsPage){
+        //校验页面名称、站点Id、页面webpath的唯一性 ---唯一索引
+        CmsPage existPage = cmsPageRepository.findByPageNameAndSiteIdAndPageWebPath(cmsPage.getPageName(),cmsPage.getSiteId(),cmsPage.getPageWebPath());
+        if(existPage != null){
+            //throw new CustomException(CommonCode.FAIL);
+            ExceptionCast.cast(CmsCode.CMS_ADDPAGE_EXISTSNAME);
+        }
+        cmsPage.setPageId(null);
+        cmsPageRepository.save(cmsPage);
+        return new CmsPageResult(CommonCode.SUCCESS,cmsPage);
     }
 
     public CmsPage getById(String id){
