@@ -9,6 +9,9 @@ import com.xuecheng.framework.model.response.ResponseResult;
 import com.xuecheng.manage_cms.service.CmsTemplateService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
 
 @RestController
 @RequestMapping("/cms/template")
@@ -29,11 +32,11 @@ public class CmsTemplateController implements CmsTemplateControllerApi {
         return cmsTemplateService.findAll();
     }
 
-    @Override
+    /*@Override
     @PostMapping("add")
     public CmsTemplateResult add(@RequestBody CmsTemplate cmsTemplate) {
         return cmsTemplateService.add(cmsTemplate);
-    }
+    }*/
 
     @Override
     @GetMapping("/get/{id}")
@@ -41,15 +44,27 @@ public class CmsTemplateController implements CmsTemplateControllerApi {
         return cmsTemplateService.findById(id);
     }
 
-    @Override
+    /*@Override
     @PutMapping("/edit/{id}")
     public CmsTemplateResult edit(@PathVariable("id") String id,@RequestBody CmsTemplate cmsTemplate) {
         return cmsTemplateService.update(id,cmsTemplate);
-    }
+    }*/
 
     @Override
     @DeleteMapping("/del/{id}")
     public ResponseResult delete(@PathVariable("id") String id) {
         return cmsTemplateService.delete(id);
+    }
+
+    //upload
+    @PostMapping("add")
+    public CmsTemplateResult add(CmsTemplate cmsTemplate, MultipartFile file) throws IOException {
+        return cmsTemplateService.add(cmsTemplate,file);
+        //cmsTemplateService.uploadTemplat(file.getInputStream(),file.getName());
+    }
+    @Override
+    @PostMapping("/edit/{id}")
+    public CmsTemplateResult edit(@PathVariable("id") String id,CmsTemplate cmsTemplate, MultipartFile file) throws IOException {
+        return cmsTemplateService.update(id,cmsTemplate,file);
     }
 }
