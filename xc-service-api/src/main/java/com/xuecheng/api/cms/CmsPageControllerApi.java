@@ -13,4 +13,5 @@ public interface CmsPageControllerApi {
     CmsPage findById(String id);
     CmsPageResult edit(String id,CmsPage cmsPage);
     ResponseResult delete(String id);
+    ResponseResult post(String pageId);
 }

@@ -49,13 +49,13 @@ public class CmsPageService {
         //gridFS 查询 文件 - fileId
         String htmlFileId = cmsPage.getHtmlFileId();
         InputStream inputStream = this.getFileById(htmlFileId);
-        if(inputStream == null){
+        if(inputStream == null){//没有模板
             LOGGER.error("findById() inputStream is null,fileId:{}",htmlFileId);
             return ;
         }
         //路径： 站点物理路径 + 页面物理路径 + 文件名
         CmsSite cmsSite = this.findCmsSiteById(cmsPage.getSiteId());
-        String pagePath = cmsSite.getSitePhysicalPath() + cmsPage.getPagePhysicalPath() + cmsPage.getPageName();
+        String pagePath = cmsSite.getSitePhysicalPath() + "/" + cmsPage.getPagePhysicalPath() + "/" + cmsPage.getPageName();
         //保存到服务器
         FileOutputStream os = null;
         try {
