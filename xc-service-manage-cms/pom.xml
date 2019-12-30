@@ -13,7 +13,7 @@
     <artifactId>xc-service-manage-cms</artifactId>
 
     <properties>
-        <skipTests>true</skipTests>
+        <skipTests>true</skipTests><!-- 打包跳过单元测试 -->
     </properties>
 
     <dependencies>
