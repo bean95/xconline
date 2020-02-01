@@ -1,12 +1,19 @@
 package com.xuecheng.manage_course.serivce;
 
+import com.github.pagehelper.Page;
+import com.github.pagehelper.PageHelper;
 import com.xuecheng.framework.domain.course.CourseBase;
 import com.xuecheng.framework.domain.course.Teachplan;
+import com.xuecheng.framework.domain.course.ext.CourseInfo;
 import com.xuecheng.framework.domain.course.ext.TeachplanNode;
+import com.xuecheng.framework.domain.course.request.CourseListRequest;
 import com.xuecheng.framework.exception.ExceptionCast;
 import com.xuecheng.framework.model.response.CommonCode;
+import com.xuecheng.framework.model.response.QueryResponseResult;
+import com.xuecheng.framework.model.response.QueryResult;
 import com.xuecheng.framework.model.response.ResponseResult;
 import com.xuecheng.manage_course.dao.CourseBaseRepository;
+import com.xuecheng.manage_course.dao.CourseMapper;
 import com.xuecheng.manage_course.dao.TeachplanMapper;
 import com.xuecheng.manage_course.dao.TeachplanRepository;
 import org.apache.commons.lang3.StringUtils;
@@ -27,6 +34,8 @@ public class CourseService {
     private TeachplanRepository teachplanRepository;
     @Autowired
     private CourseBaseRepository courseBaseRepository;
+    @Autowired
+    private CourseMapper courseMapper;
 
     public TeachplanNode findTeachplanList(String courseId){
         return teachplanMapper.selectList(courseId);
@@ -38,7 +47,8 @@ public class CourseService {
             ExceptionCast.cast(CommonCode.INVALID_PARAM);
         }
         String courseId = teachplan.getCourseid();
-        String parentId = teachplan.getParentid();Teachplan teachplanNew = new Teachplan();
+        String parentId = teachplan.getParentid();
+        Teachplan teachplanNew = new Teachplan();
         BeanUtils.copyProperties(teachplan,teachplanNew);
         Teachplan parentNode = this.getTeachplanRoot(courseId);
         if(StringUtils.isEmpty(parentId)){
@@ -76,5 +86,44 @@ public class CourseService {
         }
         //return teachplanList.get(0).getId();
         return teachplanList.get(0);
+    }
+
+    public QueryResponseResult findCourseList(int pageNo, int pageSize, CourseListRequest courseListRequest){
+        PageHelper.startPage(pageNo,pageSize);
+        Page<CourseInfo> page = courseMapper.findCourseList();
+        QueryResult<CourseInfo> queryResult = new QueryResult<>();
+        queryResult.setList(page.getResult());
+        queryResult.setTotal(page.getTotal());
+        QueryResponseResult queryResponseResult = new QueryResponseResult(CommonCode.SUCCESS,queryResult);
+        return queryResponseResult;
+    }
+
+    public ResponseResult addCourseBase(CourseBase courseBase){
+        courseBaseRepository.save(courseBase);
+        return new ResponseResult(CommonCode.SUCCESS);
+    }
+
+    public CourseBase findCourseBaseById(String courseId){
+        Optional<CourseBase> optional = courseBaseRepository.findById(courseId);
+        if(optional.isPresent()){
+            return optional.get();
+        }
+        return null;
+    }
+
+    public ResponseResult updateCoursebase(String courseId,CourseBase courseBase) {
+        CourseBase origin = this.findCourseBaseById(courseId);
+        if(origin!=null){
+            origin.setName(courseBase.getName());
+            origin.setUsers(courseBase.getUsers());
+            origin.setGrade(courseBase.getGrade());
+            origin.setStudymodel(courseBase.getStudymodel());
+            origin.setMt(courseBase.getMt());
+            origin.setSt(courseBase.getSt());
+            origin.setDescription(courseBase.getDescription());
+            courseBaseRepository.save(origin);
+            return new ResponseResult(CommonCode.SUCCESS);
+        }
+        return new ResponseResult(CommonCode.FAIL);
     }
 }
