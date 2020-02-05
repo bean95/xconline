@@ -2,6 +2,7 @@ package com.xuecheng.manage_course.controller;
 
 import com.xuecheng.api.course.CourseControllerApi;
 import com.xuecheng.framework.domain.course.CourseBase;
+import com.xuecheng.framework.domain.course.CoursePic;
 import com.xuecheng.framework.domain.course.Teachplan;
 import com.xuecheng.framework.domain.course.ext.TeachplanNode;
 import com.xuecheng.framework.domain.course.request.CourseListRequest;
@@ -54,6 +55,24 @@ public class CourseController implements CourseControllerApi {
     @PutMapping("/coursebase/updateCoursebase/{courseId}")
     public ResponseResult updateCoursebase(@PathVariable("courseId")String courseId,@RequestBody CourseBase courseBase) {
         return courseService.updateCoursebase(courseId,courseBase);
+    }
+
+    @Override
+    @PostMapping("/coursepic/add")
+    public ResponseResult addCoursePic(@RequestParam("courseId") String courseId,@RequestParam("pic") String pic) {
+        return courseService.addCoursePic(courseId,pic);
+    }
+
+    @Override
+    @GetMapping("/coursepic/list/{coursdId}")
+    public CoursePic findCoursePic(@PathVariable("coursdId") String coursdId) {
+        return courseService.findCoursePic(coursdId);
+    }
+
+    @Override
+    @DeleteMapping("/coursepic/delete")
+    public ResponseResult deleteCoursePic(@RequestParam("courseId") String courseId) {
+        return courseService.deleteCoursePic(courseId);
     }
 
 

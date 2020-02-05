@@ -3,6 +3,7 @@ package com.xuecheng.manage_course.serivce;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.xuecheng.framework.domain.course.CourseBase;
+import com.xuecheng.framework.domain.course.CoursePic;
 import com.xuecheng.framework.domain.course.Teachplan;
 import com.xuecheng.framework.domain.course.ext.CourseInfo;
 import com.xuecheng.framework.domain.course.ext.TeachplanNode;
@@ -12,10 +13,7 @@ import com.xuecheng.framework.model.response.CommonCode;
 import com.xuecheng.framework.model.response.QueryResponseResult;
 import com.xuecheng.framework.model.response.QueryResult;
 import com.xuecheng.framework.model.response.ResponseResult;
-import com.xuecheng.manage_course.dao.CourseBaseRepository;
-import com.xuecheng.manage_course.dao.CourseMapper;
-import com.xuecheng.manage_course.dao.TeachplanMapper;
-import com.xuecheng.manage_course.dao.TeachplanRepository;
+import com.xuecheng.manage_course.dao.*;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,11 +34,14 @@ public class CourseService {
     private CourseBaseRepository courseBaseRepository;
     @Autowired
     private CourseMapper courseMapper;
+    @Autowired
+    private CoursePicRepository coursePicRepository;
 
     public TeachplanNode findTeachplanList(String courseId){
         return teachplanMapper.selectList(courseId);
     }
 
+    @Transactional
     public ResponseResult addTeachplan(Teachplan teachplan){
 
         if(teachplan == null || StringUtils.isEmpty(teachplan.getCourseid()) || StringUtils.isEmpty(teachplan.getPname())){
@@ -98,6 +99,7 @@ public class CourseService {
         return queryResponseResult;
     }
 
+    @Transactional
     public ResponseResult addCourseBase(CourseBase courseBase){
         courseBaseRepository.save(courseBase);
         return new ResponseResult(CommonCode.SUCCESS);
@@ -111,6 +113,7 @@ public class CourseService {
         return null;
     }
 
+    @Transactional
     public ResponseResult updateCoursebase(String courseId,CourseBase courseBase) {
         CourseBase origin = this.findCourseBaseById(courseId);
         if(origin!=null){
@@ -122,6 +125,40 @@ public class CourseService {
             origin.setSt(courseBase.getSt());
             origin.setDescription(courseBase.getDescription());
             courseBaseRepository.save(origin);
+            return new ResponseResult(CommonCode.SUCCESS);
+        }
+        return new ResponseResult(CommonCode.FAIL);
+    }
+
+    @Transactional
+    public ResponseResult addCoursePic(String courseId, String pic) {
+        CoursePic coursePic = null;
+        Optional<CoursePic> optional = coursePicRepository.findById(courseId);
+        if(optional.isPresent()){
+            coursePic = optional.get();
+        }
+        if(coursePic == null){
+            coursePic = new CoursePic();
+            coursePic.setCourseid(courseId);
+        }
+        coursePic.setPic(pic);
+        coursePicRepository.save(coursePic);
+        return new ResponseResult(CommonCode.SUCCESS);
+    }
+
+    public CoursePic findCoursePic(String coursdId) {
+        Optional<CoursePic> optional = coursePicRepository.findById(coursdId);
+        if(optional.isPresent()){
+            return optional.get();
+        }
+        return null;
+    }
+
+    @Transactional
+    public ResponseResult deleteCoursePic(String courseId) {
+        //TODO 删除fastdfs上的图片
+        long result = coursePicRepository.deleteByCourseid(courseId);
+        if(result > 0){
             return new ResponseResult(CommonCode.SUCCESS);
         }
         return new ResponseResult(CommonCode.FAIL);
