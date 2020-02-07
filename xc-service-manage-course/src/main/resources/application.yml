@@ -19,3 +19,23 @@ spring:
       minEvictableIdleTimeMillis: 300000  #连接在连接池的最小生存时间（毫秒）
 pagehelper:
   helper-dialect: mysql
+
+
+eureka:
+  client:
+    register-with-eureka: true  #是否将自己注册到Eureka服务中
+    fetch-registry: true #服务发现，是否从Eureka中获取注册信息（服务列表）
+    service-url:
+      defaultZone: ${EUREKA_SERVER:http://localhost:50101/eureka/,http://localhost:50102/eureka/}
+  instance:
+    prefer-ip-address: true  #将自己ip注册到Eureka服务中
+    ip-address: ${IP_ADDRESS:127.0.0.1}
+    instance-id: ${spring.application.name}:${server.port}
+
+ribbon:
+  MaxAutoRetries: 2  #最大重试次数
+  MaxAutoRetriesNextServer: 3 #切换实例重试次数
+  OkToRetryOnAllOperations: false  #对所有请求进行重试
+  ConnectTimeout: 5000  #请求连接的超时时间
+  ReadTimeout: 6000  #请求处理的超时时间
+
