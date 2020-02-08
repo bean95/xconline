@@ -4,6 +4,7 @@ spring:
   application:
     name: xc-govern-center #服务名
 
+#RibbonLoadBalancerClient
 eureka:
   client:
     register-with-eureka: true  #是否将自己注册到Eureka服务中

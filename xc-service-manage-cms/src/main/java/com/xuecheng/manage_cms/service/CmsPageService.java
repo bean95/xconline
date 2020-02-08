@@ -276,4 +276,11 @@ public class CmsPageService {
 
     }
 
+    public CmsPageResult save(CmsPage cmsPage) {
+        CmsPage existPage = cmsPageRepository.findByPageNameAndSiteIdAndPageWebPath(cmsPage.getPageName(),cmsPage.getSiteId(),cmsPage.getPageWebPath());
+        if(existPage != null){
+            return this.update(existPage.getPageId(),cmsPage);
+        }
+        return this.add(cmsPage);
+    }
 }

@@ -21,6 +21,8 @@ public class CmsPagePreviewController extends BaseController {
     public void preview(@PathVariable("pageId") String pageId) throws IOException {
         String html = cmsPageService.getPageHtml(pageId);
         ServletOutputStream outputStream = response.getOutputStream();
+        //返回必须是html才能解析ssi
+        response.setHeader("Content-type","text/html;charset=utf-8");
         outputStream.write(html.getBytes("utf-8"));
     }
 }

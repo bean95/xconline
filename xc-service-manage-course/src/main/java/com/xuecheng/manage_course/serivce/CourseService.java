@@ -2,21 +2,28 @@ package com.xuecheng.manage_course.serivce;
 
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
+import com.xuecheng.framework.domain.cms.CmsPage;
+import com.xuecheng.framework.domain.cms.response.CmsPageResult;
 import com.xuecheng.framework.domain.course.CourseBase;
+import com.xuecheng.framework.domain.course.CourseMarket;
 import com.xuecheng.framework.domain.course.CoursePic;
 import com.xuecheng.framework.domain.course.Teachplan;
 import com.xuecheng.framework.domain.course.ext.CourseInfo;
+import com.xuecheng.framework.domain.course.ext.CourseView;
 import com.xuecheng.framework.domain.course.ext.TeachplanNode;
 import com.xuecheng.framework.domain.course.request.CourseListRequest;
+import com.xuecheng.framework.domain.course.response.CoursePublishResult;
 import com.xuecheng.framework.exception.ExceptionCast;
 import com.xuecheng.framework.model.response.CommonCode;
 import com.xuecheng.framework.model.response.QueryResponseResult;
 import com.xuecheng.framework.model.response.QueryResult;
 import com.xuecheng.framework.model.response.ResponseResult;
 import com.xuecheng.manage_course.dao.*;
+import com.xuecheng.manage_course.feigninterface.CmsPageClient;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,6 +43,24 @@ public class CourseService {
     private CourseMapper courseMapper;
     @Autowired
     private CoursePicRepository coursePicRepository;
+    @Autowired
+    private CourseMarketRepository courseMarketRepository;
+    @Autowired
+    private CmsPageClient cmsPageClient;
+
+    @Value("${course-publish.siteId}")
+    private String siteId;
+    @Value("${course-publish.templateId}")
+    private String templateId;
+    @Value("${course-publish.previewUrl}")
+    private String previewUrl;
+    @Value("${course-publish.pageWebPath}")
+    private String pageWebPath;
+    @Value("${course-publish.pagePhysicalPath}")
+    private String pagePhysicalPath;
+    @Value("${course-publish.dataUrlPre}")
+    private String dataUrlPre;
+
 
     public TeachplanNode findTeachplanList(String courseId){
         return teachplanMapper.selectList(courseId);
@@ -162,5 +187,47 @@ public class CourseService {
             return new ResponseResult(CommonCode.SUCCESS);
         }
         return new ResponseResult(CommonCode.FAIL);
+    }
+
+    public CourseView getCourseView(String id) {
+        CourseView courseView = new CourseView();
+        Optional<CourseBase> courseBaseOptional = courseBaseRepository.findById(id);
+        if(courseBaseOptional.isPresent()){
+            courseView.setCourseBase(courseBaseOptional.get());
+        }
+
+        Optional<CoursePic> optionalCoursePic = coursePicRepository.findById(id);
+        if(optionalCoursePic.isPresent()){
+            courseView.setCoursePic(optionalCoursePic.get());
+        }
+
+        Optional<CourseMarket> optionalCourseMarket = courseMarketRepository.findById(id);
+        if(optionalCourseMarket.isPresent()){
+            courseView.setCourseMarket(optionalCourseMarket.get());
+        }
+
+        TeachplanNode teachplanNode = teachplanMapper.selectList(id);
+        courseView.setTeachplanNode(teachplanNode);
+
+        return courseView;
+    }
+
+    public CoursePublishResult preview(String id) {
+
+        CmsPage cmsPage = new CmsPage();
+        cmsPage.setSiteId(siteId);
+        cmsPage.setDataUrl(dataUrlPre+id);
+        cmsPage.setPageName(id+".html");
+        cmsPage.setPageAliase(this.findCourseBaseById(id).getName());
+        cmsPage.setPagePhysicalPath(pagePhysicalPath);
+        cmsPage.setPageWebPath(pageWebPath);
+        cmsPage.setTemplateId(templateId);
+
+        CmsPageResult cmsPageResult = cmsPageClient.saveCmsPage(cmsPage);
+        if(!cmsPageResult.isSuccess()){
+            return new CoursePublishResult(CommonCode.FAIL,null);
+        }
+        String url = previewUrl + cmsPageResult.getCmsPage().getPageId();
+        return new CoursePublishResult(CommonCode.SUCCESS,url);
     }
 }
