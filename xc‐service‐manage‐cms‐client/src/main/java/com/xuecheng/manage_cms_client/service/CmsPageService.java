@@ -56,6 +56,7 @@ public class CmsPageService {
         //路径： 站点物理路径 + 页面物理路径 + 文件名
         CmsSite cmsSite = this.findCmsSiteById(cmsPage.getSiteId());
         String pagePath = cmsSite.getSitePhysicalPath() + "/" + cmsPage.getPagePhysicalPath() + "/" + cmsPage.getPageName();
+        //String pagePath = cmsSite.getSitePhysicalPath() + cmsPage.getPagePhysicalPath() + cmsPage.getPageName();
         //保存到服务器
         FileOutputStream os = null;
         try {

@@ -5,10 +5,12 @@ import com.mongodb.client.gridfs.GridFSBucket;
 import com.mongodb.client.gridfs.GridFSDownloadStream;
 import com.mongodb.client.gridfs.model.GridFSFile;
 import com.xuecheng.framework.domain.cms.CmsPage;
+import com.xuecheng.framework.domain.cms.CmsSite;
 import com.xuecheng.framework.domain.cms.CmsTemplate;
 import com.xuecheng.framework.domain.cms.request.QueryPageRequest;
 import com.xuecheng.framework.domain.cms.response.CmsCode;
 import com.xuecheng.framework.domain.cms.response.CmsPageResult;
+import com.xuecheng.framework.domain.cms.response.CmsPostPageResult;
 import com.xuecheng.framework.exception.ExceptionCast;
 import com.xuecheng.framework.model.response.CommonCode;
 import com.xuecheng.framework.model.response.QueryResponseResult;
@@ -16,6 +18,7 @@ import com.xuecheng.framework.model.response.QueryResult;
 import com.xuecheng.framework.model.response.ResponseResult;
 import com.xuecheng.manage_cms.config.RabbitmqConfig;
 import com.xuecheng.manage_cms.dao.CmsPageRepository;
+import com.xuecheng.manage_cms.dao.CmsSiteRepository;
 import com.xuecheng.manage_cms.dao.CmsTemplateRepository;
 import freemarker.cache.StringTemplateLoader;
 import freemarker.template.Configuration;
@@ -65,6 +68,9 @@ public class CmsPageService {
 
     @Autowired
     private RabbitTemplate rabbitTemplate;
+
+    @Autowired
+    private CmsSiteRepository cmsSiteRepository;
 
     @ApiOperation("分页查询页面列表")
     @ApiImplicitParams({
@@ -282,5 +288,29 @@ public class CmsPageService {
             return this.update(existPage.getPageId(),cmsPage);
         }
         return this.add(cmsPage);
+    }
+
+    public CmsPostPageResult postPageQuick(CmsPage cmsPage) {
+        CmsPageResult save = this.save(cmsPage);
+        if(!save.isSuccess()){
+            ExceptionCast.cast(CommonCode.FAIL);
+        }
+        CmsPage cmsPage1 = save.getCmsPage();
+        String pageId = cmsPage1.getPageId();
+        ResponseResult post = this.post(pageId);
+        if(!post.isSuccess()){
+            ExceptionCast.cast(CommonCode.FAIL);
+        }
+        CmsSite cmsSite = this.findCmsSiteById(cmsPage1.getSiteId());
+        String url = cmsSite.getSiteDomain()+cmsSite.getSiteWebPath()+cmsPage1.getPageWebPath()+cmsPage1.getPageName();
+        return new CmsPostPageResult(CommonCode.SUCCESS,url);
+    }
+
+    public CmsSite findCmsSiteById(String id){
+        Optional<CmsSite> optional = cmsSiteRepository.findById(id);
+        if(optional.isPresent()){
+            return optional.get();
+        }
+        return null;
     }
 }

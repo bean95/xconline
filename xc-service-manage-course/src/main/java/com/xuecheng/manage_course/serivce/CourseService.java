@@ -4,6 +4,7 @@ import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.xuecheng.framework.domain.cms.CmsPage;
 import com.xuecheng.framework.domain.cms.response.CmsPageResult;
+import com.xuecheng.framework.domain.cms.response.CmsPostPageResult;
 import com.xuecheng.framework.domain.course.CourseBase;
 import com.xuecheng.framework.domain.course.CourseMarket;
 import com.xuecheng.framework.domain.course.CoursePic;
@@ -214,6 +215,34 @@ public class CourseService {
 
     public CoursePublishResult preview(String id) {
 
+        CmsPage cmsPage = buildCmsPage(id);
+
+        CmsPageResult cmsPageResult = cmsPageClient.saveCmsPage(cmsPage);
+        if(!cmsPageResult.isSuccess()){
+            return new CoursePublishResult(CommonCode.FAIL,null);
+        }
+        String url = previewUrl + cmsPageResult.getCmsPage().getPageId();
+        return new CoursePublishResult(CommonCode.SUCCESS,url);
+    }
+
+    @Transactional
+    public CoursePublishResult publish(String id) {
+
+        CmsPage cmsPage = buildCmsPage(id);
+        CmsPostPageResult cmsPostPageResult = cmsPageClient.postPageQuick(cmsPage);
+        if(!cmsPostPageResult.isSuccess()){
+            return new CoursePublishResult(CommonCode.FAIL,null);
+        }
+
+        //更新课程发布状态为已发布
+        CourseBase courseBase = this.updateCourseStatus(id);
+        if(courseBase==null){
+            return new CoursePublishResult(CommonCode.FAIL,null);
+        }
+        return new CoursePublishResult(CommonCode.SUCCESS,cmsPostPageResult.getPageUrl());
+    }
+
+    private CmsPage buildCmsPage(String id){
         CmsPage cmsPage = new CmsPage();
         cmsPage.setSiteId(siteId);
         cmsPage.setDataUrl(dataUrlPre+id);
@@ -222,12 +251,13 @@ public class CourseService {
         cmsPage.setPagePhysicalPath(pagePhysicalPath);
         cmsPage.setPageWebPath(pageWebPath);
         cmsPage.setTemplateId(templateId);
+        return cmsPage;
+    }
 
-        CmsPageResult cmsPageResult = cmsPageClient.saveCmsPage(cmsPage);
-        if(!cmsPageResult.isSuccess()){
-            return new CoursePublishResult(CommonCode.FAIL,null);
-        }
-        String url = previewUrl + cmsPageResult.getCmsPage().getPageId();
-        return new CoursePublishResult(CommonCode.SUCCESS,url);
+    private CourseBase updateCourseStatus(String courseId){
+        CourseBase courseBase = this.findCourseBaseById(courseId);
+        courseBase.setStatus("202002");
+        courseBaseRepository.save(courseBase);
+        return courseBase;
     }
 }
