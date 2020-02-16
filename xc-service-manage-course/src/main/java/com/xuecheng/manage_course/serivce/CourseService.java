@@ -1,14 +1,12 @@
 package com.xuecheng.manage_course.serivce;
 
+import com.alibaba.fastjson.JSON;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.xuecheng.framework.domain.cms.CmsPage;
 import com.xuecheng.framework.domain.cms.response.CmsPageResult;
 import com.xuecheng.framework.domain.cms.response.CmsPostPageResult;
-import com.xuecheng.framework.domain.course.CourseBase;
-import com.xuecheng.framework.domain.course.CourseMarket;
-import com.xuecheng.framework.domain.course.CoursePic;
-import com.xuecheng.framework.domain.course.Teachplan;
+import com.xuecheng.framework.domain.course.*;
 import com.xuecheng.framework.domain.course.ext.CourseInfo;
 import com.xuecheng.framework.domain.course.ext.CourseView;
 import com.xuecheng.framework.domain.course.ext.TeachplanNode;
@@ -28,6 +26,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -48,6 +48,8 @@ public class CourseService {
     private CourseMarketRepository courseMarketRepository;
     @Autowired
     private CmsPageClient cmsPageClient;
+    @Autowired
+    private  CoursePubRepository coursePubRepository;
 
     @Value("${course-publish.siteId}")
     private String siteId;
@@ -239,6 +241,12 @@ public class CourseService {
         if(courseBase==null){
             return new CoursePublishResult(CommonCode.FAIL,null);
         }
+
+        //保存课程索引信息
+        CoursePub coursePub = createCoursePub(id);
+        saveCoursePub(id,coursePub);
+        //缓存课程信息
+        //TODO
         return new CoursePublishResult(CommonCode.SUCCESS,cmsPostPageResult.getPageUrl());
     }
 
@@ -259,5 +267,51 @@ public class CourseService {
         courseBase.setStatus("202002");
         courseBaseRepository.save(courseBase);
         return courseBase;
+    }
+
+    private CoursePub createCoursePub(String courseId){
+        CoursePub coursePub = new CoursePub();
+        //courseBase
+        Optional<CourseBase> baseOptional = courseBaseRepository.findById(courseId);
+        if(baseOptional.isPresent()){
+            CourseBase courseBase = baseOptional.get();
+            BeanUtils.copyProperties(courseBase,coursePub);
+        }
+        //coursePic
+        Optional<CoursePic> picOptional = coursePicRepository.findById(courseId);
+        if(picOptional.isPresent()){
+            CoursePic coursePic = picOptional.get();
+            BeanUtils.copyProperties(coursePic,coursePub);
+        }
+        //coursePic
+        Optional<CourseMarket> marketOptional = courseMarketRepository.findById(courseId);
+        if(marketOptional.isPresent()){
+            CourseMarket courseMarket = marketOptional.get();
+            BeanUtils.copyProperties(courseMarket,coursePub);
+        }
+        //teachplan
+        TeachplanNode teachplanNode = teachplanMapper.selectList(courseId);
+        String planJson = JSON.toJSONString(teachplanNode);
+        coursePub.setTeachplan(planJson);
+        return coursePub;
+    }
+
+    private CoursePub saveCoursePub(String id,CoursePub coursePub){
+        CoursePub coursePubNew = null;
+        Optional<CoursePub> coursePubOptional = coursePubRepository.findById(id);
+        if(coursePubOptional.isPresent()){
+            coursePubNew = coursePubOptional.get();
+        }else{
+            coursePubNew = new CoursePub();
+        }
+        BeanUtils.copyProperties(coursePub,coursePubNew);
+        Date now = new Date();
+        coursePubNew.setTimestamp(now);
+        coursePubNew.setId(id);
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        coursePubNew.setPubTime(format.format(now));
+        coursePubRepository.save(coursePubNew);
+        return coursePubNew;
+
     }
 }
