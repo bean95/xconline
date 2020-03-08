@@ -77,6 +77,7 @@ public class AuthService {
             }
         });
 
+        //exchange:允许调用者指定HTTP请求的方法、可以在请求中增加body以及头信息
         ResponseEntity<Map> exchange = restTemplate.exchange(authUrl, HttpMethod.POST, httpEntity, Map.class);
         //申请的令牌的信息
         Map tokenMap = exchange.getBody();

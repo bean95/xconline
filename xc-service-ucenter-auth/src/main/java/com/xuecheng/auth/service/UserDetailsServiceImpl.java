@@ -1,5 +1,6 @@
 package com.xuecheng.auth.service;
 
+import com.xuecheng.auth.client.UserClient;
 import com.xuecheng.framework.domain.ucenter.XcMenu;
 import com.xuecheng.framework.domain.ucenter.ext.XcUserExt;
 import org.apache.commons.lang3.StringUtils;
@@ -23,7 +24,9 @@ import java.util.List;
 public class UserDetailsServiceImpl implements UserDetailsService {
 
     @Autowired
-    ClientDetailsService clientDetailsService;
+    private ClientDetailsService clientDetailsService;
+    @Autowired
+    private UserClient userClient;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
@@ -41,13 +44,16 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         if (StringUtils.isEmpty(username)) {
             return null;
         }
-        XcUserExt userext = new XcUserExt();
-        userext.setUsername("itcast");
-        userext.setPassword(new BCryptPasswordEncoder().encode("123"));
-        userext.setPermissions(new ArrayList<XcMenu>());
+
+        XcUserExt userext = userClient.getUserext(username);
         if(userext == null){
             return null;
         }
+        //XcUserExt userext = new XcUserExt();
+        //userext.setUsername("itcast");
+        //userext.setPassword(new BCryptPasswordEncoder().encode("123"));
+        userext.setPermissions(new ArrayList<XcMenu>());
+
         //取出正确密码（hash值）
         String password = userext.getPassword();
         //这里暂时使用静态密码
