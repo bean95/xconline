@@ -20,6 +20,7 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.DefaultResponseErrorHandler;
 import org.springframework.web.client.RestTemplate;
+import springfox.documentation.spring.web.json.Json;
 
 import java.io.IOException;
 import java.net.URI;
@@ -86,6 +87,13 @@ public class AuthService {
             tokenMap.get("access_token")==null ||
                 tokenMap.get("refresh_token")==null ||
                 tokenMap.get("jti")==null){
+            String error_description = (String) tokenMap.get("error_description");
+            if(error_description.indexOf("UserDetailsService returned null")!=-1){
+                ExceptionCast.cast(AuthCode.AUTH_ACCOUNT_NOTEXISTS);
+            }else if(error_description.indexOf("坏的凭证")!=-1){
+                ExceptionCast.cast(AuthCode.AUTH_CREDENTIAL_ERROR);
+            }
+
             return null;
         }
         AuthToken authToken = new AuthToken();
@@ -105,7 +113,7 @@ public class AuthService {
      * @return
      */
     private boolean saveToken(String access_token,String content, long expire){
-        String key = "user_token" + access_token;
+        String key = "user_token:" + access_token;
         redisTemplate.boundValueOps(key).set(content,expire, TimeUnit.SECONDS);
         Long flag = redisTemplate.getExpire(key,TimeUnit.SECONDS);
         return flag > 0;
@@ -115,5 +123,27 @@ public class AuthService {
         String s = clientId+":"+clientSecret;
         byte[] encode = Base64Utils.encode(s.getBytes());
         return "Basic "+new String(encode);
+    }
+
+    //从redis中查询令牌
+    public AuthToken getToken(String jwi){
+        String key = "user_token:" + jwi;
+        String tokenJson = redisTemplate.opsForValue().get(key);
+        try {
+            AuthToken authToken = JSON.parseObject(tokenJson, AuthToken.class);
+            return authToken;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    //redis中删除令牌
+    public boolean delToken(String jwi){
+        String key = "user_token:" + jwi;
+        redisTemplate.delete(key);
+        Long expire = redisTemplate.getExpire(key, TimeUnit.SECONDS);
+        //return expire < 0; // 在reids中可能过期了，删除失败
+        return true;
     }
 }
