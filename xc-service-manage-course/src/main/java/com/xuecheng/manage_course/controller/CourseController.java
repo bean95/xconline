@@ -12,6 +12,7 @@ import com.xuecheng.framework.model.response.QueryResponseResult;
 import com.xuecheng.framework.model.response.ResponseResult;
 import com.xuecheng.manage_course.serivce.CourseService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -67,6 +68,7 @@ public class CourseController implements CourseControllerApi {
 
     @Override
     @GetMapping("/coursepic/list/{coursdId}")
+    @PreAuthorize("hasAuthority('course_pic_list')")
     public CoursePic findCoursePic(@PathVariable("coursdId") String coursdId) {
         return courseService.findCoursePic(coursdId);
     }
