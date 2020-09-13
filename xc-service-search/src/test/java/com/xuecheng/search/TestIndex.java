@@ -42,7 +42,9 @@ public class TestIndex {
     @Test
     public void createIndexTest() throws IOException {
         CreateIndexRequest createIndexRequest = new CreateIndexRequest("xc_course");
+        //分片、副本
         createIndexRequest.settings(Settings.builder().put("number_of_shards","1").put("number_of_replicas","0"));
+        //指定映射
         createIndexRequest.mapping("doc","{\n" +
                 "\t\"properties\":{\n" +
                 "\t\t\"studymodel\":{\n" +
